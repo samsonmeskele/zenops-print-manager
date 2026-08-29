@@ -8,7 +8,7 @@ price catalog per client.
 
 import sqlite3
 import os
-from pathlib import Path
+from pathlib import Path    
 from datetime import datetime
 from pypdf import PdfReader
 from fpdf.enums import XPos, YPos
