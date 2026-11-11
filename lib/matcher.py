@@ -1,41 +1,59 @@
 import re
 from config import SUBJECT_KEYWORDS, GRADES
 
+# Ways people write "grade", longest first so "grade" wins over "gr" or "g".
+_GRADE_WORDS = r'(?:grade|grad|gra|grd|gr|g)'
+
+# Prefix:  g9, gr9, gra9, grad9, grade9, grade 9, gr.9, G-09
+_PREFIX = re.compile(rf'(?<![a-z]){_GRADE_WORDS}\s*0?(\d{{1,2}})(?!\d)')
+# Suffix:  9g, 9gr, 9 grade
+_SUFFIX = re.compile(rf'(?<!\d)0?(\d{{1,2}})\s*{_GRADE_WORDS}(?![a-z])')
+# Ordinal: 9th, 10th, 7TH
+_ORDINAL = re.compile(r'(?<!\d)0?(\d{1,2})(?:st|nd|rd|th)(?![a-z])')
+
+# Separators that should count as spaces (underscore is a "word" character in
+# regex, which is why names like "math_g9" used to fail).
+_SEPARATORS = re.compile(r'[_\-.,()\[\]{}+]+')
+
+
+def _normalize(filename):
+    """Lowercase, drop the extension, turn separators into single spaces."""
+    name = filename.lower()
+    if name.endswith('.pdf') or re.search(r'\.[a-z0-9]{2,4}$', name):
+        name = name.rsplit('.', 1)[0]
+    name = _SEPARATORS.sub(' ', name)
+    return re.sub(r'\s+', ' ', name).strip()
+
+
+def _find_grade(name):
+    # Most specific pattern first; within a pattern, take the first number
+    # that is an allowed grade.
+    for pattern in (_PREFIX, _SUFFIX, _ORDINAL):
+        for m in pattern.finditer(name):
+            value = int(m.group(1))
+            if value in GRADES:
+                return value
+    return None
+
+
+def _find_subject(name):
+    # Longer keywords first, so "social studies" beats "social".
+    for key in sorted(SUBJECT_KEYWORDS, key=len, reverse=True):
+        # Letters on either side block the match ("it" won't match inside
+        # "history"), but digits and separators are fine ("g9math", "math9").
+        if re.search(r'(?<![a-z])' + key + r'(?![a-z])', name):
+            return SUBJECT_KEYWORDS[key]
+    return None
+
+
 def parse_filename(filename):
     """
     Analyzes a filename and returns (grade, subject).
-    If it cannot determine either, returns None.
+    Either value is None if it cannot be determined.
+
+    Understands, in any letter case:
+      g9, gr9, gra9, grd9, grad9, grade9, grade 9, grade_9, Grade-09
+      9g, 9gr, 9 grade, 9th
     """
-    # Remove extension and convert to lowercase
-    name = filename.lower().rsplit('.', 1)[0]
-    
-    # 1. Find Grade 
-    grade = None
-    
-    # Pattern A: Prefix (G9, Gr9, Grd9, Grad9, Grade9, Grade 9)
-    match_prefix = re.search(r'\b(?:grade|grad|grd|gr|g)\s*([6-9]|1[0-2])\b', name)
-    # Pattern B: Suffix (9grade, 9 grad)
-    match_suffix = re.search(r'\b([6-9]|1[0-2])\s*(?:grade|grad|grd)\b', name)
-    # Pattern C: Ordinal (9th, 10th)
-    match_ordinal = re.search(r'\b([6-9]|1[0-2])(?:st|nd|rd|th)\b', name)
-    
-    if match_prefix:
-        grade = int(match_prefix.group(1))
-    elif match_suffix:
-        grade = int(match_suffix.group(1))
-    elif match_ordinal:
-        grade = int(match_ordinal.group(1))
-        
-    # Validate grade is between 6 and 12
-    if grade not in GRADES:
-        grade = None
-
-    # 2. Find Subject
-    subject = None
-    for key, subj_name in SUBJECT_KEYWORDS.items():
-        # \b ensures we match whole words only (e.g. "it" won't match inside "history")
-        if re.search(r'\b' + key + r'\b', name):
-            subject = subj_name
-            break
-
-    return grade, subject
+    name = _normalize(filename)
+    return _find_grade(name), _find_subject(name)
