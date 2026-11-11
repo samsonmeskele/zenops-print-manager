@@ -16,6 +16,8 @@ catalog/
 
 # Third-party binary (download separately, see README)
 bin/
+dist
+build/
 
 # OS files
 .DS_Store

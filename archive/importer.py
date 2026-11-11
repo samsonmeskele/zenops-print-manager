@@ -1,5 +1,5 @@
 """
-ZenOps Print Manager - Importer & Catalog Generator
+Importer & Catalog Generator
 
 Scans each client's handout folder, catalogs PDFs into a per-client SQLite
 database with computed sheet pricing, and can generate a printable PDF

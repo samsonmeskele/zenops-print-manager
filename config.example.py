@@ -1,40 +1,41 @@
-"""
-ZenOps Print Manager - Configuration Template
+import os
+import sys
 
-Copy this file to `config.py` and fill in your real paths and client list.
-`config.py` is listed in .gitignore, so your local file paths and business
-data are never committed to version control.
-"""
+# 1. Determine the base folder dynamically
+if getattr(sys, 'frozen', False):
+    # If running as a compiled .exe
+    BASE_SCRIPT_DIR = os.path.dirname(sys.executable)
+else:
+    # If running as a normal Python script
+    BASE_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# --- Directories ---
-# Where scripts, the SumatraPDF binary, and generated databases/catalogs live.
-BASE_SCRIPT_DIR = r'C:\Path\To\Scripts'
+# 2. Make Documents folder dynamic (Works for any Windows user)
+DOCUMENTS_DIR = ""
 
-# Root folder containing one subfolder per client, each holding PDF handouts
-# organized into grade-numbered subfolders (e.g. "Grade 5/Math.pdf").
-BASE_HANDOUTS_DIR = r'C:\Path\To\Handouts'
+# App Directories
+BASE_DB_DIR = os.path.join(BASE_SCRIPT_DIR, 'database')
+CACHE_FOLDER = os.path.join(BASE_SCRIPT_DIR, '.pdf_cache')
+BIN_FOLDER = os.path.join(BASE_SCRIPT_DIR, 'bin')
+BACKUP_FOLDER = os.path.join(BASE_SCRIPT_DIR, 'backups')
 
-# --- Printer ---
-SUMATRA_EXE = 'SumatraPDF-3.5.2-64.exe'
+SUMATRA_EXE = 'SumatraPDF-3.6.1-64.exe'
+DEFAULT_PRICE_PER_SHEET = ""
+PRINTER_KEYWORDS = ""
 
-# Only printers whose name contains one of these keywords (case-insensitive)
-# will show up in the printer selection dropdown.
-PRINTER_KEYWORDS = ['canon']
-
-# --- Pricing ---
-# Base rate charged per physical sheet of paper.
-PRICE_PER_SHEET = 5.0
-
-# --- Clients ---
-# Each client maps to a print "mode":
-#   "duplex"  -> front-and-back printing. 2 PDF pages = 1 physical sheet.
-#                Pages are split into odd/even batches for manual flip-and-reprint.
-#   "simplex" -> single-sided printing, printed as-is with no odd/even split.
-#                1 PDF page = 1 physical sheet.
-CLIENTS = {
-    "ClientA": {"mode": "duplex"},
-    "ClientB": {"mode": "duplex"},
-    "ClientC": {"mode": "duplex"},
-    "ClientD": {"mode": "simplex"},
-    "ClientE": {"mode": "duplex"},
+# Filename Parsing Keywords
+SUBJECT_KEYWORDS = {
+    "math": "Mathematics", "maths": "Mathematics", "mathematics": "Mathematics",
+    "eng": "English", "english": "English",
+    "phy": "Physics", "physics": "Physics",
+    "chem": "Chemistry", "chemistry": "Chemistry",
+    "bio": "Biology", "biology": "Biology",
+    "sci": "Science", "science": "Science",
+    "hist": "History", "history": "History",
+    "geo": "Geography", "geography": "Geography",
+    "civ": "Civics", "civics": "Civics", "citizenship": "Citizenship",
+    "social": "Social Studies", "sst": "Social Studies",
+    "amh": "Amharic", "amharic": "Amharic",
+    "it": "IT", "ict": "IT", "computer": "IT"
 }
+
+GRADES = ""
